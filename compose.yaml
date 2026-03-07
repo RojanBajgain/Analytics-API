@@ -3,7 +3,7 @@ services:
     image: analytic-api:v1
     build:
       context: .
-      dockerfile: DockerFile.web
+      dockerfile: Dockerfile.web
 
     environment:
       - PORT=8002
@@ -22,6 +22,6 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: DockerFile.web
+          path: Dockerfile.web
         - action: rebuild
           path: compose.yaml

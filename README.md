@@ -1,6 +1,6 @@
 ## Docker
 
-- `docker build -t analytic-api -f DockerFile.web .`
+- `docker build -t analytic-api -f Dockerfile.web .`
 - `docker run -p 8000:8000 analytic-api`
 
 <!--container auto deletes when stopped -> Very convenient for testing
