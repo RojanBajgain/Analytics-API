@@ -1,0 +1,90 @@
+# ---------------------------------------------------
+# Use a lightweight Python 3.12 base image
+# The version can be overridden at build time
+# Example: docker build --build-arg PYTHON_VERSION=3.11-slim .
+# ---------------------------------------------------
+ARG PYTHON_VERSION=3.13.7-slim-bookworm
+FROM python:${PYTHON_VERSION}
+
+
+# ---------------------------------------------------
+# Install uv (a fast Python package manager and
+# dependency resolver that replaces pip/pip-tools)
+# ---------------------------------------------------
+RUN pip install uv
+
+
+# ---------------------------------------------------
+# Set the working directory inside the container.
+# All following commands will run inside /app
+# ---------------------------------------------------
+WORKDIR /app
+
+
+# ---------------------------------------------------
+# Copy dependency definition files first.
+# This allows Docker to cache dependency installation
+# so rebuilding the image is faster when only source
+# code changes.
+# ---------------------------------------------------
+COPY pyproject.toml uv.lock ./
+
+
+# ---------------------------------------------------
+# Install project dependencies using uv.
+# --no-dev ensures development dependencies are not
+# installed in the production image.
+# ---------------------------------------------------
+RUN uv sync --no-dev
+
+
+# ---------------------------------------------------
+# Copy the application source code into the container
+# In this case the project source is inside /src
+# ---------------------------------------------------
+COPY src ./src
+
+
+# ---------------------------------------------------
+# Environment variables for Python runtime
+#
+# PYTHONUNBUFFERED
+#   ensures logs are printed immediately (important
+#   for container logging systems)
+#
+# PYTHONDONTWRITEBYTECODE
+#   prevents Python from creating .pyc files which
+#   reduces unnecessary file writes
+# ---------------------------------------------------
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+
+# ---------------------------------------------------
+# Define default port for the FastAPI application.
+# Platforms like Railway/Render may override this
+# with their own PORT environment variable.
+# ---------------------------------------------------
+ENV PORT=8000
+
+
+# ---------------------------------------------------
+# Start the FastAPI application using:
+#
+# uv run → runs commands inside uv-managed environment
+# gunicorn → production-ready Python web server
+# uvicorn worker → required for ASGI frameworks
+# like FastAPI
+#
+# src.main:app
+#   src       → module/folder
+#   main      → python file (main.py)
+#   app       → FastAPI instance inside that file
+#
+# The server binds to 0.0.0.0 so it is accessible
+# outside the container.
+# ---------------------------------------------------
+CMD ["sh", "-c", "uv run gunicorn src.main:app -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-8000}"]
+
+# or (can use this for development with hot reload)
+# CMD ["sh", "-c", "uv run gunicorn src.main:app -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-8000}"]
