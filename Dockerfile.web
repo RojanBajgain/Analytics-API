@@ -84,7 +84,9 @@ ENV PORT=8000
 # The server binds to 0.0.0.0 so it is accessible
 # outside the container.
 # ---------------------------------------------------
-CMD ["sh", "-c", "uv run gunicorn src.main:app -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-8000}"]
+ENV PYTHONPATH=/app/src
+
+CMD ["sh", "-c", "uv run gunicorn src.app:app -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-8000}"]
 
 # or (can use this for development with hot reload)
 # CMD ["sh", "-c", "uv run gunicorn src.main:app -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-8000}"]
